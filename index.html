@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvasell</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hind+Siliguri:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F1F4F2; --surface: #FFFFFF; --ink: #0F1A17; --muted: #55645F; --line: #D8E0DC;
+  --accent: #0E6B57; --accent-ink: #FFFFFF; --hi: #F4B43A; --hi-ink: #2A1D00; --soft: #E3EEE9; --danger: #B3261E;
+  --font-display: "Bricolage Grotesque", "Hind Siliguri", system-ui, sans-serif;
+  --font-body: "Hind Siliguri", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #0C1311; --surface: #141E1B; --ink: #EAF1EE; --muted: #9AABA5; --line: #243330;
+    --accent: #3FCF9F; --accent-ink: #04251C; --soft: #1A2925; --danger: #FF8A80;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; padding: 0 0 48px; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+
+.top { padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+.top-in { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; }
+.top.full { padding: 0; background: var(--logo-bg, var(--surface)); border-bottom: 1px solid var(--line); }
+.top.full .top-in { max-width: none; }
+.top.full .logo { display: block; width: 100%; }
+.top.full .logo img { width: 100%; height: auto; max-height: 240px; object-fit: contain; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: -0.02em; }
+.logo svg { width: 34px; height: 34px; flex: none; }
+.logo img { height: 40px; width: auto; max-width: 100%; object-fit: contain; display: block; }
+.logo img.s-medium { height: 64px; }
+.logo img.s-large { height: 100px; }
+.crumb { display: inline-flex; align-items: center; gap: 6px; padding: 6px 2px; margin-bottom: 14px; color: var(--muted); font-weight: 500; }
+.crumb:hover { color: var(--ink); }
+
+.hero { padding-block: 18px 22px; display: grid; gap: 10px; max-width: 640px; }
+.hero h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); }
+.hero p { color: var(--muted); }
+.sec-title { font-size: 1.3rem; margin-bottom: 14px; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 760px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; } }
+@media (max-width: 759px) { .grid .card:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+.card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; transition: transform .15s ease, border-color .15s ease; position: relative; }
+.card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.tile { aspect-ratio: 4 / 3; max-width: 100%; display: grid; place-items: center; color: #fff; overflow: hidden; }
+.tile svg { width: 46%; max-width: 150px; height: auto; }
+.tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.card h3 { font-size: 1.08rem; overflow-wrap: anywhere; }
+.card .tag { color: var(--muted); font-size: .9rem; line-height: 1.45; }
+.card-foot { margin-top: auto; padding-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.price { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.price small { font-family: var(--font-body); font-weight: 500; color: var(--muted); font-size: .8rem; }
+.pill { background: var(--hi); color: var(--hi-ink); font-weight: 600; font-size: .82rem; padding: 3px 10px; border-radius: 99px; }
+.pill.off { background: var(--line); color: var(--muted); }
+.empty { padding: 28px 16px; text-align: center; border: 2px dashed var(--line); border-radius: 14px; color: var(--muted); }
+
+.block { margin-top: 44px; }
+.trust { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 760px) { .trust { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } }
+.trust-item { padding: 16px; border-radius: 14px; background: var(--soft); display: grid; gap: 6px; align-content: start; min-width: 0; }
+.trust-item svg { width: 28px; height: 28px; color: var(--accent); }
+.trust-item h3 { font-size: 1rem; }
+.trust-item p { font-size: .92rem; color: var(--muted); line-height: 1.5; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; counter-reset: s; }
+@media (min-width: 760px) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; }
+.steps li::before { content: counter(s); width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; font-family: var(--font-display); }
+.steps b { display: block; }
+.steps span { color: var(--muted); font-size: .92rem; }
+.faq { display: grid; gap: 8px; }
+details.q { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; }
+details.q summary { cursor: pointer; padding: 13px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details.q summary::-webkit-details-marker { display: none; }
+details.q summary::after { content: "+"; font-size: 1.3rem; line-height: 1.2; color: var(--accent); }
+details.q[open] summary::after { content: "–"; }
+details.q p { padding-bottom: 14px; color: var(--muted); }
+footer { margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+.pd { display: grid; gap: 22px; }
+@media (min-width: 820px) { .pd { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 36px; align-items: start; } }
+.pd .tile { border-radius: 18px; aspect-ratio: 5 / 4; }
+.pd .tile svg { width: 38%; max-width: 190px; }
+.pd-info { display: grid; gap: 14px; min-width: 0; }
+.pd-info h1 { font-size: clamp(1.7rem, 5vw, 2.3rem); overflow-wrap: anywhere; }
+.big-price { font-family: var(--font-display); font-weight: 700; font-size: 2rem; }
+.big-price small { font-family: var(--font-body); font-size: .95rem; color: var(--muted); font-weight: 500; }
+.label { font-weight: 600; font-size: .92rem; color: var(--muted); letter-spacing: .02em; }
+.plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+.plan { text-align: left; background: var(--surface); border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 2px; }
+.plan[aria-checked="true"] { border-color: var(--accent); background: var(--soft); }
+.plan b { font-family: var(--font-display); font-size: 1.1rem; }
+.plan span { color: var(--muted); font-size: .88rem; }
+.btn { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 52px; padding: 0 22px; border-radius: 12px; border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 1.05rem; width: 100%; }
+.btn:hover { filter: brightness(1.08); }
+.btn[aria-disabled="true"] { background: var(--line); color: var(--muted); pointer-events: none; }
+.minitrust { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font-size: .9rem; }
+.minitrust span { display: inline-flex; gap: 6px; align-items: center; }
+.minitrust svg { width: 16px; height: 16px; color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: grid; gap: 10px; min-width: 0; }
+.panel h2 { font-size: 1.1rem; }
+.ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ticks li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; overflow-wrap: anywhere; }
+.ticks li::before { content: ""; width: 20px; height: 20px; margin-top: 3px; border-radius: 50%; background-color: var(--accent); background-repeat: no-repeat; background-position: center; background-size: 14px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.ticks.terms li::before { background-color: var(--muted); }
+.desc { white-space: pre-line; color: var(--muted); }
+.howto { margin-top: 22px; }
+.howto-in { display: grid; gap: 16px; }
+@media (min-width: 820px) { .howto-in.both { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; } }
+.vid { aspect-ratio: 16 / 9; width: 100%; max-width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+.vid iframe, .vid video { width: 100%; height: 100%; border: 0; display: block; }
+.stepl { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
+.stepl li { padding-left: 4px; overflow-wrap: anywhere; }
+
+.pay { max-width: 600px; margin: 0 auto; display: grid; gap: 16px; }
+.pay h1 { font-size: 1.7rem; }
+.sum { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; }
+.sum .tile { aspect-ratio: 1; border-radius: 12px; }
+.sum .tile svg { width: 60%; }
+.sum b { font-family: var(--font-display); }
+.methods { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.method { background: var(--surface); border: 2px solid var(--line); border-radius: 12px; padding: 10px 6px; font-weight: 600; display: grid; justify-items: center; gap: 4px; }
+.method[aria-checked="true"] { border-color: var(--accent); background: var(--soft); }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.instr { background: var(--soft); border-radius: 12px; padding: 14px 16px; display: grid; gap: 10px; }
+.numrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; background: var(--surface); border: 1px dashed var(--accent); border-radius: 10px; padding: 8px 12px; }
+.num { font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: .04em; user-select: all; overflow-wrap: anywhere; }
+.copy { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 6px 14px; font-weight: 600; }
+.instr ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span, .field > label { font-weight: 600; }
+.field input[type="text"], .field input[type="email"], .field input[type="number"], .field input:not([type]), .field input[type="tel"], .field textarea, .field select { font: inherit; color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 46px; width: 100%; min-width: 0; }
+.field textarea { resize: vertical; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--accent); outline: none; }
+.field small { color: var(--muted); }
+.err { color: var(--danger); font-size: .88rem; }
+.done { border: 2px solid var(--accent); background: var(--soft); border-radius: 14px; padding: 16px 18px; display: grid; gap: 12px; }
+.done pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: .92rem; background: var(--surface); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); }
+[hidden] { display: none !important; }
+
+/* admin */
+.adm-bar { margin-top: 16px; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+.adm-bar h1 { font-size: 1.25rem; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn-s { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); font-weight: 600; width: auto; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.btn-s:hover { border-color: var(--accent); }
+.btn-s.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-s.dng { color: var(--danger); }
+.btn-s.sm { min-height: 34px; padding: 0 10px; font-size: .9rem; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tab { border: 2px solid var(--line); background: var(--surface); border-radius: 99px; padding: 6px 16px; font-weight: 600; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.adm { display: grid; gap: 14px; }
+.adm-item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.adm-item > summary { cursor: pointer; padding: 12px 16px; display: flex; align-items: center; gap: 12px; list-style: none; font-weight: 600; }
+.adm-item > summary::-webkit-details-marker { display: none; }
+.adm-item > summary::after { content: "▾"; margin-left: auto; color: var(--muted); }
+.adm-item[open] > summary::after { content: "▴"; }
+.adm-item .thumb { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; flex: none; color: #fff; }
+.adm-item .thumb svg { width: 60%; }
+.adm-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.adm-body { padding: 4px 16px 16px; display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.two { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.line { display: grid; gap: 8px; grid-template-columns: 1fr 110px auto; align-items: end; }
+.line.p4 { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) auto; }
+.chk { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+.imgbox { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.imgbox .prev { width: 96px; height: 76px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; color: #fff; border: 1px solid var(--line); }
+.imgbox .prev img { width: 100%; height: 100%; object-fit: cover; }
+.imgbox .prev svg { width: 50%; }
+.note { background: var(--soft); border-radius: 12px; padding: 12px 14px; font-size: .94rem; }
+input[type="color"] { width: 100%; min-height: 46px; padding: 3px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 8px 16px; border-radius: 99px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.toast.bad { background: var(--danger); color: #fff; }
+@media (prefers-reduced-motion: reduce) { .card, .toast { transition: none; } .card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<div class="wrap">
+  <main id="app"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script id="seed" type="application/json">
+{
+  "savedAt": 0,
+  "settings": {
+    "storeName": "Canvasell",
+    "logo": "",
+    "heroTitle": "প্রিমিয়াম অ্যাপ, সহজ দামে",
+    "heroText": "CapCut আর Canva-র প্রো অ্যাক্সেস। প্রোডাক্ট বেছে নিন, মোবাইল ব্যাংকিংয়ে পেমেন্ট করুন, ডেলিভারি নিন।",
+    "whatsapp": "8801XXXXXXXXX",
+    "footer": "© Canvasell"
+  },
+  "payments": [
+    { "name": "bKash", "number": "01XXXXXXXXX", "kind": "Send Money", "color": "#E2136E" },
+    { "name": "Nagad", "number": "01XXXXXXXXX", "kind": "Send Money", "color": "#F6921E" },
+    { "name": "Rocket", "number": "01XXXXXXXXX", "kind": "Send Money", "color": "#8C3494" }
+  ],
+  "products": [
+    { "id": "capcut-pro", "name": "CapCut Pro", "tag": "প্রো ফিচারসহ ভিডিও এডিটিং", "color": "#16181D", "art": "video", "image": "", "inStock": true,
+      "plans": [ { "label": "1 Month", "price": 350 }, { "label": "3 Months", "price": 900 } ],
+      "desc": "",
+      "features": ["Pro ইফেক্ট, ট্রানজিশন ও ফিল্টার", "ওয়াটারমার্ক ছাড়া এক্সপোর্ট", "HD ও 4K পর্যন্ত এক্সপোর্ট", "টেমপ্লেট ও ক্লাউড স্টোরেজ"],
+      "terms": ["একটি অর্ডার একজনের ব্যবহারের জন্য।", "লগইন বা ইনভাইটের তথ্য অন্য কাউকে শেয়ার করবেন না।", "মেয়াদ শেষে সাবস্ক্রিপশন বন্ধ হয়ে যাবে।"],
+      "idLabel": "যে ইমেইলে CapCut অ্যাক্সেস নিতে চান" },
+    { "id": "canva-pro", "name": "Canva Pro", "tag": "প্রো টুলস দিয়ে ডিজাইন", "color": "#6B3FEA", "art": "design", "image": "", "inStock": true,
+      "plans": [ { "label": "1 Month", "price": 150 }, { "label": "3 Months", "price": 400 } ],
+      "desc": "",
+      "features": ["প্রিমিয়াম টেমপ্লেট, ছবি ও এলিমেন্ট", "Background Remover", "Brand Kit ও Magic Resize", "ট্রান্সপারেন্ট ব্যাকগ্রাউন্ডে ডাউনলোড"],
+      "terms": ["একটি অর্ডার একজনের ব্যবহারের জন্য।", "লগইন বা ইনভাইটের তথ্য অন্য কাউকে শেয়ার করবেন না।", "মেয়াদ শেষে সাবস্ক্রিপশন বন্ধ হয়ে যাবে।"],
+      "idLabel": "যে ইমেইলে Canva Pro নিতে চান" },
+    { "id": "canva-owner", "name": "Canva Owner", "tag": "টিমের ওনার অ্যাক্সেস সহ", "color": "#007A85", "art": "owner", "image": "", "inStock": true,
+      "plans": [ { "label": "1 Month", "price": 250 }, { "label": "3 Months", "price": 650 } ],
+      "desc": "",
+      "features": ["আপনি টিমের Owner হবেন", "নিজে মেম্বার ইনভাইট ও ম্যানেজ করতে পারবেন", "Canva Pro-র সব ফিচার", "নিজের ইমেইলে সরাসরি অ্যাক্সেস"],
+      "terms": ["একটি অর্ডার একজনের ব্যবহারের জন্য।", "লগইন বা ইনভাইটের তথ্য অন্য কাউকে শেয়ার করবেন না।", "মেয়াদ শেষে সাবস্ক্রিপশন বন্ধ হয়ে যাবে।"],
+      "idLabel": "যে ইমেইলে Owner অ্যাক্সেস নিতে চান" }
+  ],
+  "trust": [
+    { "icon": "bolt", "title": "দ্রুত ডেলিভারি", "text": "পেমেন্ট কনফার্ম হলেই আপনার ইমেইলে অ্যাক্সেস পাঠানো হয়।" },
+    { "icon": "shield", "title": "রিপ্লেসমেন্ট সুবিধা", "text": "সাবস্ক্রিপশন চলাকালীন সমস্যা হলে সমাধান বা রিপ্লেস।" },
+    { "icon": "chat", "title": "সরাসরি সাপোর্ট", "text": "যেকোনো সমস্যায় WhatsApp-এ আমাদের সঙ্গে কথা বলুন।" },
+    { "icon": "lock", "title": "নিরাপদ পেমেন্ট", "text": "bKash, Nagad বা Rocket দিয়ে পেমেন্ট। কোনো কার্ড তথ্য লাগে না।" }
+  ],
+  "steps": [
+    { "title": "প্রোডাক্ট বেছে নিন", "text": "প্ল্যান দেখে Buy Now চাপুন।" },
+    { "title": "পেমেন্ট করুন", "text": "bKash, Nagad বা Rocket-এ টাকা পাঠিয়ে Transaction ID দিন।" },
+    { "title": "ডেলিভারি নিন", "text": "WhatsApp-এ কনফার্ম করলে আপনার ইমেইলে অ্যাক্সেস যাবে।" }
+  ],
+  "faq": [
+    { "q": "পেমেন্টের পর কতক্ষণে পাব?", "a": "পেমেন্ট যাচাই হলেই ডেলিভারি দেওয়া হয়। WhatsApp-এ অর্ডার পাঠালে আমরা সরাসরি জানিয়ে দিই।" },
+    { "q": "সাবস্ক্রিপশনে সমস্যা হলে কী করব?", "a": "WhatsApp-এ আপনার অর্ডারের তথ্যসহ মেসেজ দিন। আমরা সমাধান বা রিপ্লেস করে দেব।" },
+    { "q": "কোন কোন মাধ্যমে পেমেন্ট নেওয়া হয়?", "a": "bKash, Nagad ও Rocket। পেমেন্ট পেজে আমাদের নম্বর দেখানো আছে। শুধু সেই নম্বরেই টাকা পাঠান।" }
+  ]
+}
+</script>
+
+<script>
+var KEY = "canvasell_data_v1";
+var D, app = document.getElementById("app"), topEl = document.getElementById("top"), toastEl = document.getElementById("toast");
+var sel = {}, form = { name: "", wa: "", email: "", trx: "", method: 0 };
+var adm = { tab: "products", open: {} };
+
+var ART = {
+  video: '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><rect x="8" y="14" width="84" height="52" rx="8" stroke="#fff" stroke-width="5"/><path d="M42 30l20 10-20 10z" fill="#fff"/><path d="M8 80h30M44 80h18M68 80h24" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>',
+  design: '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="36" cy="38" r="22" stroke="#fff" stroke-width="5"/><rect x="42" y="42" width="42" height="42" rx="6" stroke="#fff" stroke-width="5"/><path d="M70 14l12 20H58z" fill="#fff"/></svg>',
+  owner: '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M50 10l34 12v26c0 20-14 36-34 42C30 84 16 68 16 48V22z" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="42" r="9" stroke="#fff" stroke-width="5"/><path d="M50 51v22M50 62h10M50 72h7" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>',
+  bag: '<svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M20 32h60l-5 52H25z" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M35 32v-6a15 15 0 0 1 30 0v6" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>'
+};
+var IC = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
+var ICON = {
+  bolt: IC('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+  shield: IC('<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5L15.5 10"/>'),
+  chat: IC('<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>'),
+  lock: IC('<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'),
+  star: IC('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>'),
+  clock: IC('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')
+};
+var ICON_NAMES = { bolt: "বিদ্যুৎ (দ্রুত)", shield: "ঢাল (নিরাপত্তা)", chat: "চ্যাট (সাপোর্ট)", lock: "তালা (পেমেন্ট)", star: "তারা (মান)", clock: "ঘড়ি (সময়)" };
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function tk(n) { return "৳" + n; }
+function lines(a) { return (a || []).map(function (x) { return String(x).trim(); }).filter(Boolean); }
+function slug(s) { return (String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item") + "-" + Math.random().toString(36).slice(2, 6); }
+
+/* ---------- data ---------- */
+function load() {
+  var seed = JSON.parse(document.getElementById("seed").textContent), loc = null;
+  try { loc = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+  D = (loc && loc.products && (loc.savedAt || 0) >= (seed.savedAt || 0)) ? loc : seed;
+}
+var flashT;
+function flash(msg, bad) {
+  toastEl.textContent = msg; toastEl.className = "toast on" + (bad ? " bad" : "");
+  clearTimeout(flashT); flashT = setTimeout(function () { toastEl.className = "toast"; }, 1400);
+}
+function save() {
+  D.savedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(D)); flash("সেভ হয়েছে"); }
+  catch (e) { flash("সেভ হয়নি। ছবি বেশি বড় হতে পারে।", true); }
+}
+function prod(id) { return D.products.filter(function (p) { return p.id === id; })[0]; }
+function planOf(p) { var i = sel[p.id] || 0; return p.plans[i] || p.plans[0] || { label: "", price: 0 }; }
+function minPrice(p) { return p.plans.length ? Math.min.apply(null, p.plans.map(function (x) { return Number(x.price) || 0; })) : 0; }
+
+/* ---------- shared bits ---------- */
+function tile(p) {
+  if (p.image) return '<div class="tile"><img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"></div>';
+  return '<div class="tile" style="background:' + esc(p.color) + '">' + (ART[p.art] || ART.bag) + '</div>';
+}
+function logoMode() { return (D.settings.logo ? (D.settings.logoSize || "full") : "text"); }
+function logoHTML() {
+  var st = D.settings, mode = logoMode();
+  var mark = st.logo ? '<img class="s-' + esc(mode) + '" src="' + esc(st.logo) + '" alt="' + esc(st.storeName) + '">' :
+    '<svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="var(--accent)"/><path d="M10 12h14l-1.6 10.5a2 2 0 0 1-2 1.7h-6.8a2 2 0 0 1-2-1.7L10 12z" fill="none" stroke="var(--accent-ink)" stroke-width="2" stroke-linejoin="round"/><path d="M13.5 12v-1.2a3.5 3.5 0 0 1 7 0V12" fill="none" stroke="var(--accent-ink)" stroke-width="2" stroke-linecap="round"/></svg><span>' + esc(st.storeName) + '</span>';
+  return '<a class="logo" href="#home" aria-label="' + esc(st.storeName) + ' হোম">' + mark + '</a>';
+}
+function videoEmbed(url) {
+  url = (url || "").trim(); if (!url) return null;
+  var m;
+  if ((m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/))) return { t: "iframe", src: "https://www.youtube-nocookie.com/embed/" + m[1] + "?rel=0" };
+  if (/facebook\.com|fb\.watch/.test(url)) return { t: "iframe", src: "https://www.facebook.com/plugins/video.php?show_text=false&href=" + encodeURIComponent(url) };
+  if ((m = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/))) return { t: "iframe", src: "https://drive.google.com/file/d/" + m[1] + "/preview" };
+  if (/^https?:\/\/.+\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url)) return { t: "video", src: url };
+  if (/^https?:\/\//.test(url)) return { t: "link", src: url };
+  return null;
+}
+function howtoHTML(p) {
+  var v = videoEmbed(p.videoUrl), steps = lines(p.howto);
+  if (!v && !steps.length) return "";
+  var media = "";
+  if (v && v.t === "iframe") media = '<div class="vid"><iframe src="' + esc(v.src) + '" title="' + esc(p.name) + ' ব্যবহারের ভিডিও" loading="lazy" allow="fullscreen; picture-in-picture; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
+  else if (v && v.t === "video") media = '<div class="vid"><video controls preload="metadata" playsinline src="' + esc(v.src) + '"></video></div>';
+  if (v) media += '<div><a class="btn-s sm" target="_blank" rel="noopener" href="' + esc(p.videoUrl.trim()) + '">ভিডিও নতুন ট্যাবে খুলুন</a></div>';
+  var list = steps.length ? '<ol class="stepl">' + steps.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join("") + '</ol>' : "";
+  return '<section class="panel howto"><h2>কীভাবে চালু ও ব্যবহার করবেন</h2><div class="howto-in' + (v && steps.length ? " both" : "") + '">' +
+    (media ? '<div style="display:grid;gap:10px;min-width:0">' + media + '</div>' : "") + list + '</div></section>';
+}
+
+/* ---------- public views ---------- */
+function homeView() {
+  var cards = D.products.map(function (p) {
+    return '<a class="card" href="#product-' + esc(p.id) + '">' + tile(p) +
+      '<div class="card-body"><h3>' + esc(p.name) + '</h3><p class="tag">' + esc(p.tag) + '</p>' +
+      '<div class="card-foot"><span class="price">' + tk(minPrice(p)) + '</span>' +
+      (p.inStock === false ? '<span class="pill off">স্টক শেষ</span>' : '<span class="pill">বিস্তারিত</span>') + '</div></div></a>';
+  }).join("");
+  var trust = D.trust.map(function (t) { return '<div class="trust-item">' + (ICON[t.icon] || ICON.star) + '<h3>' + esc(t.title) + '</h3><p>' + esc(t.text) + '</p></div>'; }).join("");
+  var steps = D.steps.map(function (s) { return '<li><div><b>' + esc(s.title) + '</b><span>' + esc(s.text) + '</span></div></li>'; }).join("");
+  var faq = D.faq.map(function (f) { return '<details class="q"><summary>' + esc(f.q) + '</summary><p>' + esc(f.a) + '</p></details>'; }).join("");
+  var chips = D.payments.map(function (m) { return esc(m.name); }).join(" · ");
+  return '<section class="hero"><h1>' + esc(D.settings.heroTitle) + '</h1><p>' + esc(D.settings.heroText) + '</p></section>' +
+    '<h2 class="sec-title">আমাদের প্রোডাক্ট</h2>' + (cards ? '<div class="grid">' + cards + '</div>' : '<div class="empty">এখনো কোনো প্রোডাক্ট নেই।</div>') +
+    (trust ? '<section class="block"><h2 class="sec-title">কেন আমাদের ওপর ভরসা করবেন</h2><div class="trust">' + trust + '</div></section>' : '') +
+    (steps ? '<section class="block"><h2 class="sec-title">কীভাবে কিনবেন</h2><ol class="steps">' + steps + '</ol></section>' : '') +
+    (faq ? '<section class="block"><h2 class="sec-title">সাধারণ প্রশ্ন</h2><div class="faq">' + faq + '</div></section>' : '') +
+    '<footer><span>' + esc(D.settings.footer) + '</span><span>পেমেন্ট: ' + chips + '</span></footer>';
+}
+
+function productView(p) {
+  var cur = planOf(p), ci = sel[p.id] || 0;
+  var plans = p.plans.map(function (x, i) {
+    return '<button type="button" class="plan" role="radio" data-plan="' + i + '" aria-checked="' + (i === ci) + '"><b>' + esc(x.label) + '</b><span>' + tk(x.price) + '</span></button>';
+  }).join("");
+  var feats = lines(p.features).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join("");
+  var terms = lines(p.terms).map(function (f) { return '<li>' + esc(f) + '</li>'; }).join("");
+  var out = p.inStock === false;
+  return '<a class="crumb" href="#home">← সব প্রোডাক্ট</a>' +
+    '<div class="pd">' + tile(p) +
+    '<div class="pd-info"><h1>' + esc(p.name) + '</h1><p class="muted">' + esc(p.tag) + '</p>' +
+    '<div class="big-price" id="bigprice">' + tk(cur.price) + ' <small>/ ' + esc(cur.label) + '</small></div>' +
+    (p.plans.length > 1 ? '<div><div class="label" id="planlbl">প্ল্যান বেছে নিন</div><div class="plans" role="radiogroup" aria-labelledby="planlbl" id="plans">' + plans + '</div></div>' : '') +
+    (out ? '<a class="btn" aria-disabled="true" href="#product-' + esc(p.id) + '">স্টক শেষ</a>' : '<a class="btn" href="#pay-' + esc(p.id) + '">Buy Now</a>') +
+    '<div class="minitrust"><span>' + ICON.bolt + 'দ্রুত ডেলিভারি</span><span>' + ICON.shield + 'রিপ্লেসমেন্ট সুবিধা</span><span>' + ICON.chat + 'WhatsApp সাপোর্ট</span></div>' +
+    '</div></div>' +
+    '<div class="pd" style="margin-top:22px"><div style="display:grid;gap:16px;min-width:0">' +
+    (p.desc && p.desc.trim() ? '<div class="panel"><h2>বিবরণ</h2><p class="desc">' + esc(p.desc) + '</p></div>' : '') +
+    (feats ? '<div class="panel"><h2>যা যা পাবেন</h2><ul class="ticks">' + feats + '</ul></div>' : '') + '</div>' +
+    '<div style="display:grid;gap:16px;min-width:0"><div class="panel"><h2>কীভাবে পাবেন</h2><p class="muted">পেমেন্ট করে Transaction ID দিলে আমরা যাচাই করে আপনার দেওয়া ইমেইলে অ্যাক্সেস পাঠিয়ে দেব। বিস্তারিত WhatsApp-এ জানানো হবে।</p></div>' +
+    (terms ? '<div class="panel"><h2>শর্তাবলী</h2><ul class="ticks terms">' + terms + '</ul></div>' : '') + '</div></div>' + howtoHTML(p);
+}
+
+function payView(p) {
+  var cur = planOf(p);
+  if (form.method >= D.payments.length) form.method = 0;
+  var methods = D.payments.map(function (m, i) {
+    return '<button type="button" class="method" role="radio" data-m="' + i + '" aria-checked="' + (form.method === i) + '"><span class="dot" style="background:' + esc(m.color) + '"></span>' + esc(m.name) + '</button>';
+  }).join("");
+  return '<a class="crumb" href="#product-' + esc(p.id) + '">← ' + esc(p.name) + '-এ ফিরুন</a>' +
+    '<div class="pay"><h1>পেমেন্ট</h1>' +
+    '<div class="panel sum">' + tile(p) + '<div><b>' + esc(p.name) + '</b><div class="muted">' + esc(cur.label) + '</div></div><div class="price">' + tk(cur.price) + '</div></div>' +
+    (D.payments.length ? '<div><div class="label" id="mlbl" style="margin-bottom:8px">পেমেন্ট মাধ্যম</div><div class="methods" role="radiogroup" aria-labelledby="mlbl" id="methods">' + methods + '</div></div><div class="instr" id="instr"></div>' :
+      '<div class="note">পেমেন্ট নম্বর এখনো দেওয়া হয়নি। WhatsApp-এ যোগাযোগ করুন।</div>') +
+    '<form id="orderform" novalidate class="panel" style="gap:14px">' +
+      '<div class="field"><label for="f-name">আপনার নাম</label><input id="f-name" autocomplete="name"><div class="err" id="e-name" aria-live="polite"></div></div>' +
+      '<div class="field"><label for="f-wa">WhatsApp নম্বর</label><input id="f-wa" inputmode="tel" autocomplete="tel" placeholder="01XXXXXXXXX"><div class="err" id="e-wa" aria-live="polite"></div></div>' +
+      '<div class="field"><label for="f-email">' + esc(p.idLabel || "আপনার ইমেইল") + '</label><input id="f-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com"><div class="err" id="e-email" aria-live="polite"></div></div>' +
+      '<div class="field"><label for="f-trx">Transaction ID</label><input id="f-trx" autocapitalize="characters" placeholder="যেমন 9AB3XY12CD"><small>টাকা পাঠানোর পর মেসেজে যে ID আসে, সেটি দিন।</small><div class="err" id="e-trx" aria-live="polite"></div></div>' +
+      '<button class="btn" type="submit">অর্ডার কনফার্ম করুন</button>' +
+    '</form><div class="done" id="done" hidden></div></div>';
+}
+function instrHTML(p) {
+  var m = D.payments[form.method], cur = planOf(p);
+  return '<b>' + esc(m.name) + '-এ পেমেন্ট করুন</b>' +
+    '<div class="numrow"><span class="num" id="paynum">' + esc(m.number) + '</span><button type="button" class="copy" id="copy">কপি</button></div>' +
+    '<ol><li>' + esc(m.name) + ' অ্যাপে <b>' + esc(m.kind) + '</b> বেছে নিন।</li><li>উপরের নম্বরে <b>' + tk(cur.price) + '</b> পাঠান।</li><li>নিচের ফর্মে Transaction ID দিয়ে অর্ডার কনফার্ম করুন।</li></ol>';
+}
+function bindProduct(p) {
+  var box = document.getElementById("plans"); if (!box) return;
+  box.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-plan]"); if (!b) return;
+    sel[p.id] = Number(b.getAttribute("data-plan"));
+    var cur = planOf(p);
+    Array.prototype.forEach.call(box.querySelectorAll(".plan"), function (x) { x.setAttribute("aria-checked", String(x === b)); });
+    document.getElementById("bigprice").innerHTML = tk(cur.price) + " <small>/ " + esc(cur.label) + "</small>";
+  });
+}
+function bindPay(p) {
+  var instr = document.getElementById("instr");
+  if (instr) instr.innerHTML = instrHTML(p);
+  ["name", "wa", "email", "trx"].forEach(function (k) {
+    var el = document.getElementById("f-" + k); el.value = form[k];
+    el.addEventListener("input", function () { form[k] = el.value; });
+  });
+  var ms = document.getElementById("methods");
+  if (ms) ms.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-m]"); if (!b) return;
+    form.method = Number(b.getAttribute("data-m"));
+    Array.prototype.forEach.call(ms.querySelectorAll(".method"), function (x) { x.setAttribute("aria-checked", String(x === b)); });
+    instr.innerHTML = instrHTML(p);
+  });
+  if (instr) instr.addEventListener("click", function (e) {
+    if (!e.target.closest("#copy")) return;
+    var btn = document.getElementById("copy");
+    function mark() { btn.textContent = "কপি হয়েছে"; setTimeout(function () { btn.textContent = "কপি"; }, 1500); }
+    function fb() { var r = document.createRange(); r.selectNodeContents(document.getElementById("paynum")); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "নম্বর সিলেক্ট হয়েছে"; }
+    try { navigator.clipboard.writeText(D.payments[form.method].number).then(mark, fb); } catch (err) { fb(); }
+  });
+  document.getElementById("orderform").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var errs = {};
+    if (form.name.trim().length < 2) errs.name = "আপনার নাম লিখুন।";
+    if (!/^01\d{9}$/.test(form.wa.replace(/[\s-]/g, ""))) errs.wa = "১১ সংখ্যার সঠিক নম্বর দিন (01 দিয়ে শুরু)।";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "সঠিক ইমেইল ঠিকানা দিন।";
+    if (form.trx.trim().length < 6) errs.trx = "Transaction ID দিন (কমপক্ষে ৬ অক্ষর)।";
+    ["name", "wa", "email", "trx"].forEach(function (k) { document.getElementById("e-" + k).textContent = errs[k] || ""; });
+    var first = Object.keys(errs)[0], done = document.getElementById("done");
+    if (first) { done.hidden = true; document.getElementById("f-" + first).focus(); return; }
+    var cur = planOf(p), m = D.payments[form.method] || { name: "-" };
+    var msg = "নতুন অর্ডার\nপ্রোডাক্ট: " + p.name + " (" + cur.label + ")\nটাকা: " + tk(cur.price) + "\nপেমেন্ট: " + m.name + "\nTransaction ID: " + form.trx.trim() +
+      "\nনাম: " + form.name.trim() + "\nWhatsApp: " + form.wa.trim() + "\nইমেইল: " + form.email.trim();
+    done.innerHTML = '<b>প্রায় শেষ! এখন WhatsApp-এ অর্ডার পাঠান।</b><p class="muted">নিচের বাটনে চাপলে মেসেজ তৈরি অবস্থায় WhatsApp খুলবে। সেখানে Send চাপলে অর্ডার আমাদের কাছে পৌঁছাবে।</p><pre id="msgtxt"></pre>' +
+      '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/' + esc(D.settings.whatsapp) + '?text=' + encodeURIComponent(msg) + '">WhatsApp-এ অর্ডার পাঠান</a>';
+    document.getElementById("msgtxt").textContent = msg;
+    done.hidden = false; done.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+}
+
+/* ---------- admin ---------- */
+function fld(label, key, val, o) {
+  o = o || {};
+  var attrs = 'data-k="' + key + '"' + (o.num ? ' data-num type="number" min="0"' : (o.type ? ' type="' + o.type + '"' : ' type="text"')) + (o.sync ? ' data-sync="' + o.sync + '"' : '') + (o.ph ? ' placeholder="' + esc(o.ph) + '"' : '');
+  return '<label class="field"><span>' + label + '</span><input ' + attrs + ' value="' + esc(val) + '"></label>';
+}
+function area(label, key, val, rows, isLines, hint) {
+  return '<label class="field"><span>' + label + '</span><textarea rows="' + rows + '" data-k="' + key + '"' + (isLines ? ' data-lines' : '') + '>' + esc(isLines ? (val || []).join("\n") : val) + '</textarea>' + (hint ? '<small>' + hint + '</small>' : '') + '</label>';
+}
+function imgPick(path, hasImg, prevHTML, label) {
+  return '<div class="imgbox"><div class="prev" style="background:' + (hasImg ? "var(--soft)" : "var(--accent)") + '">' + prevHTML + '</div><div class="row">' +
+    '<label class="btn-s sm" style="cursor:pointer">' + label + '<input type="file" accept="image/*" data-img="' + path + '" hidden></label>' +
+    (hasImg ? '<button type="button" class="btn-s sm dng" data-act="rm-img" data-path="' + path + '">ছবি সরান</button>' : '') + '</div></div>';
+}
+
+function adminProducts() {
+  var items = D.products.map(function (p, i) {
+    var k = "products." + i + ".";
+    var plans = p.plans.map(function (x, j) {
+      return '<div class="line">' + fld("প্ল্যান", k + "plans." + j + ".label", x.label, { ph: "যেমন 1 Month" }) + fld("দাম (৳)", k + "plans." + j + ".price", x.price, { num: true }) +
+        '<button type="button" class="btn-s sm dng" data-act="del-plan" data-i="' + i + '" data-j="' + j + '"' + (p.plans.length < 2 ? " disabled" : "") + '>মুছুন</button></div>';
+    }).join("");
+    var thumb = p.image ? '<img src="' + esc(p.image) + '" alt="">' : (ART[p.art] || ART.bag);
+    return '<details class="adm-item" data-pid="' + esc(p.id) + '"' + (adm.open[p.id] ? " open" : "") + '><summary><span class="thumb" style="background:' + esc(p.color) + '">' + thumb + '</span><span id="sum-' + i + '">' + esc(p.name || "(নাম নেই)") + '</span></summary>' +
+      '<div class="adm-body">' +
+      '<div class="two">' + fld("প্রোডাক্টের নাম", k + "name", p.name, { sync: "sum-" + i }) + fld("ছোট লাইন (কার্ডে দেখাবে)", k + "tag", p.tag) + '</div>' +
+      '<div class="two"><div class="field"><span>ছবি</span>' + imgPick(k + "image", !!p.image, p.image ? '<img src="' + esc(p.image) + '" alt="">' : (ART[p.art] || ART.bag), "ছবি আপলোড") + '<small>ছবি না দিলে নিচের রং আর আইকন দেখাবে।</small></div>' +
+        '<label class="field"><span>ব্যাকগ্রাউন্ড রং</span><input type="color" data-k="' + k + 'color" value="' + esc(p.color) + '"></label></div>' +
+      '<div><div class="label" style="margin-bottom:8px">প্ল্যান ও দাম</div><div class="adm" style="gap:8px">' + plans + '</div><div style="margin-top:8px"><button type="button" class="btn-s sm" data-act="add-plan" data-i="' + i + '">+ প্ল্যান যোগ করুন</button></div></div>' +
+      area("যা যা পাবেন (প্রতি লাইনে একটি)", k + "features", p.features, 5, true) +
+      area("বিবরণ (ঐচ্ছিক)", k + "desc", p.desc, 3, false) +
+      '<div class="panel" style="background:var(--soft)"><h2>কীভাবে চালু করবেন (ভিডিও ও ধাপ)</h2>' +
+      fld("ভিডিওর লিংক", k + "videoUrl", p.videoUrl || "", { ph: "https://youtu.be/..." }) +
+      '<small class="muted">YouTube (Unlisted রাখতে পারেন), Facebook, Google Drive বা সরাসরি .mp4 লিংক চলবে। ভিডিও ফাইল আগে YouTube বা Drive-এ আপলোড করে লিংক এখানে বসান।</small>' +
+      area("ধাপে ধাপে নির্দেশনা (প্রতি লাইনে একটি ধাপ)", k + "howto", p.howto || [], 5, true) + '</div>' +
+      area("শর্তাবলী (প্রতি লাইনে একটি)", k + "terms", p.terms, 4, true) +
+      fld("ইমেইল ঘরের লেখা (পেমেন্ট পেজে)", k + "idLabel", p.idLabel) +
+      '<label class="chk"><input type="checkbox" data-k="' + k + 'inStock"' + (p.inStock !== false ? " checked" : "") + '> স্টকে আছে</label>' +
+      '<div class="row"><button type="button" class="btn-s sm" data-act="up" data-i="' + i + '"' + (i === 0 ? " disabled" : "") + '>↑ উপরে</button><button type="button" class="btn-s sm" data-act="down" data-i="' + i + '"' + (i === D.products.length - 1 ? " disabled" : "") + '>↓ নিচে</button>' +
+      '<button type="button" class="btn-s sm" data-act="dup" data-i="' + i + '">কপি করুন</button><a class="btn-s sm" href="#product-' + esc(p.id) + '">দেখুন</a><button type="button" class="btn-s sm dng" data-act="del-prod" data-i="' + i + '">প্রোডাক্ট মুছুন</button></div>' +
+      '</div></details>';
+  }).join("");
+  return '<div class="adm">' + (items || '<div class="empty">কোনো প্রোডাক্ট নেই।</div>') + '<div><button type="button" class="btn-s pri" data-act="add-prod">+ নতুন প্রোডাক্ট</button></div></div>';
+}
+function adminStore() {
+  var s = D.settings;
+  var pays = D.payments.map(function (m, i) {
+    var k = "payments." + i + ".";
+    return '<div class="panel"><div class="two">' + fld("নাম", k + "name", m.name) + fld("নম্বর", k + "number", m.number) + fld("ধরন (যেমন Send Money)", k + "kind", m.kind) +
+      '<label class="field"><span>রং</span><input type="color" data-k="' + k + 'color" value="' + esc(m.color) + '"></label></div>' +
+      '<div><button type="button" class="btn-s sm dng" data-act="del-pay" data-i="' + i + '">মুছুন</button></div></div>';
+  }).join("");
+  return '<div class="adm"><div class="panel"><h2>দোকানের তথ্য</h2>' +
+    '<div class="two">' + fld("দোকানের নাম", "settings.storeName", s.storeName) + fld("WhatsApp নম্বর (দেশের কোডসহ, শুধু সংখ্যা)", "settings.whatsapp", s.whatsapp, { ph: "8801XXXXXXXXX" }) + '</div>' +
+    '<div class="field"><span>লোগো</span>' + imgPick("settings.logo", !!s.logo, s.logo ? '<img src="' + esc(s.logo) + '" alt="">' : '<span style="font-weight:700">' + esc(s.storeName).slice(0, 2) + '</span>', "লোগো আপলোড") + '<small>লোগো দিলে নামের জায়গায় লোগো দেখাবে।</small></div>' +
+    '<div class="two"><label class="field"><span>লোগোর সাইজ</span><select data-k="settings.logoSize">' +
+      [["full", "পুরো প্রস্থ (ডানে-বামে পুরো ভরবে)"], ["large", "বড়"], ["medium", "মাঝারি"], ["small", "ছোট"]].map(function (o) { return '<option value="' + o[0] + '"' + ((s.logoSize || "full") === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") +
+    '</select><small>লোগো লম্বা ব্যানার হলে "পুরো প্রস্থ" বাছুন।</small></label>' +
+    '<label class="field"><span>লোগোর পেছনের রং</span><input type="color" data-k="settings.logoBg" value="' + esc(s.logoBg || "#ffffff") + '"><small>লোগোর ব্যাকগ্রাউন্ডের সঙ্গে মিলিয়ে নিন।</small></label></div>' +
+    fld("প্রথম পাতার হেডলাইন", "settings.heroTitle", s.heroTitle) + area("হেডলাইনের নিচের লেখা", "settings.heroText", s.heroText, 3, false) + fld("ফুটারের লেখা", "settings.footer", s.footer) + '</div>' +
+    '<h2>পেমেন্ট নম্বর</h2>' + pays + '<div><button type="button" class="btn-s pri" data-act="add-pay">+ পেমেন্ট মাধ্যম যোগ করুন</button></div></div>';
+}
+function adminTrust() {
+  var trust = D.trust.map(function (t, i) {
+    var k = "trust." + i + ".";
+    var opts = Object.keys(ICON_NAMES).map(function (n) { return '<option value="' + n + '"' + (t.icon === n ? " selected" : "") + '>' + ICON_NAMES[n] + '</option>'; }).join("");
+    return '<div class="panel"><div class="two"><label class="field"><span>আইকন</span><select data-k="' + k + 'icon">' + opts + '</select></label>' + fld("শিরোনাম", k + "title", t.title) + '</div>' + area("লেখা", k + "text", t.text, 2, false) +
+      '<div><button type="button" class="btn-s sm dng" data-act="del-trust" data-i="' + i + '">মুছুন</button></div></div>';
+  }).join("");
+  var steps = D.steps.map(function (t, i) {
+    var k = "steps." + i + ".";
+    return '<div class="panel"><div class="two">' + fld("ধাপের নাম", k + "title", t.title) + fld("ব্যাখ্যা", k + "text", t.text) + '</div><div><button type="button" class="btn-s sm dng" data-act="del-step" data-i="' + i + '">মুছুন</button></div></div>';
+  }).join("");
+  var faq = D.faq.map(function (t, i) {
+    var k = "faq." + i + ".";
+    return '<div class="panel">' + fld("প্রশ্ন", k + "q", t.q) + area("উত্তর", k + "a", t.a, 3, false) + '<div><button type="button" class="btn-s sm dng" data-act="del-faq" data-i="' + i + '">মুছুন</button></div></div>';
+  }).join("");
+  return '<div class="adm"><h2>ভরসার বক্স</h2>' + trust + '<div><button type="button" class="btn-s pri" data-act="add-trust">+ নতুন বক্স</button></div>' +
+    '<h2>কীভাবে কিনবেন (ধাপ)</h2>' + steps + '<div><button type="button" class="btn-s pri" data-act="add-step">+ নতুন ধাপ</button></div>' +
+    '<h2>সাধারণ প্রশ্ন</h2>' + faq + '<div><button type="button" class="btn-s pri" data-act="add-faq">+ নতুন প্রশ্ন</button></div></div>';
+}
+function adminBackup() {
+  return '<div class="adm"><div class="note"><b>কীভাবে কাজ করে:</b> আপনি যা বদলান তা এই কম্পিউটারের ব্রাউজারে সেভ হয়। কাস্টমারদের দেখাতে হলে নিচের "ওয়েবসাইট ফাইল ডাউনলোড" চাপুন। সেই <b>index.html</b> ফাইলটি আপনার হোস্টিংয়ে আপলোড করুন।</div>' +
+    '<div class="panel"><h2>ওয়েবসাইট ফাইল</h2><p class="muted">সব পরিবর্তনসহ নতুন index.html তৈরি হবে।</p><div><button type="button" class="btn-s pri" data-act="export-site">ওয়েবসাইট ফাইল ডাউনলোড</button></div></div>' +
+    '<div class="panel"><h2>ব্যাকআপ</h2><p class="muted">সব তথ্য একটি ফাইলে রেখে দিন, দরকারে আবার ফিরিয়ে আনুন।</p><div class="row"><button type="button" class="btn-s" data-act="export-json">ব্যাকআপ ডাউনলোড</button>' +
+    '<label class="btn-s" style="cursor:pointer">ব্যাকআপ ফিরিয়ে আনুন<input type="file" accept="application/json,.json" data-import hidden></label></div></div>' +
+    '<div class="panel"><h2>শুরু থেকে</h2><p class="muted">সব পরিবর্তন মুছে প্রথম অবস্থায় ফিরবে।</p><div><button type="button" class="btn-s dng" data-act="reset">সব রিসেট করুন</button></div></div></div>';
+}
+function adminView() {
+  var tabs = [["products", "প্রোডাক্ট"], ["store", "দোকান ও পেমেন্ট"], ["trust", "ভরসা ও প্রশ্ন"], ["backup", "প্রকাশ ও ব্যাকআপ"]].map(function (t) {
+    return '<button type="button" class="tab" role="tab" data-tab="' + t[0] + '" aria-selected="' + (adm.tab === t[0]) + '">' + t[1] + '</button>';
+  }).join("");
+  var body = { products: adminProducts, store: adminStore, trust: adminTrust, backup: adminBackup }[adm.tab]();
+  return '<div class="adm-bar"><h1>অ্যাডমিন প্যানেল</h1><div class="row"><a class="btn-s sm" href="#home">দোকান দেখুন</a><button type="button" class="btn-s sm pri" data-act="export-site">ওয়েবসাইট ফাইল ডাউনলোড</button></div></div>' +
+    '<div class="tabs" role="tablist">' + tabs + '</div>' + body;
+}
+
+/* ---------- admin actions ---------- */
+function setPath(o, path, v) { var ks = path.split("."); for (var i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v; }
+function readImg(file, max, type, cb) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var im = new Image();
+    im.onload = function () {
+      var r = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(im.width * r)); c.height = Math.max(1, Math.round(im.height * r));
+      var x = c.getContext("2d");
+      if (type === "image/jpeg") { x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); }
+      x.drawImage(im, 0, 0, c.width, c.height);
+      cb(c.toDataURL(type, 0.85));
+    };
+    im.onerror = function () { flash("ছবিটি পড়া যায়নি", true); };
+    im.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+function download(text, name, type) {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: type })); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+function exportSite() {
+  save();
+  var clone = document.documentElement.cloneNode(true);
+  clone.querySelector("#app").innerHTML = ""; var tp = clone.querySelector("#top"); tp.innerHTML = ""; tp.className = "top"; tp.removeAttribute("style");
+  var t = clone.querySelector("#toast"); t.textContent = ""; t.className = "toast";
+  clone.querySelector("#seed").textContent = "\n" + JSON.stringify(D, null, 1).replace(/</g, "\\u003c") + "\n";
+  download("<!doctype html>\n" + clone.outerHTML, "index.html", "text/html");
+}
+var ACT = {
+  "add-prod": function () { D.products.push({ id: slug("product"), name: "নতুন প্রোডাক্ট", tag: "ছোট বিবরণ", color: "#0E6B57", art: "bag", image: "", inStock: true, plans: [{ label: "1 Month", price: 100 }], desc: "", videoUrl: "", howto: [], features: ["ফিচার ১", "ফিচার ২"], terms: ["একটি অর্ডার একজনের ব্যবহারের জন্য।"], idLabel: "আপনার ইমেইল" }); adm.open[D.products[D.products.length - 1].id] = true; },
+  "del-prod": function (d) { if (confirm("এই প্রোডাক্ট মুছে ফেলবেন?")) D.products.splice(d.i, 1); else return false; },
+  "up": function (d) { var a = D.products, i = +d.i; if (i > 0) { var t = a[i]; a[i] = a[i - 1]; a[i - 1] = t; } },
+  "down": function (d) { var a = D.products, i = +d.i; if (i < a.length - 1) { var t = a[i]; a[i] = a[i + 1]; a[i + 1] = t; } },
+  "dup": function (d) { var c = JSON.parse(JSON.stringify(D.products[d.i])); c.id = slug(c.name); c.name += " (কপি)"; D.products.splice(+d.i + 1, 0, c); adm.open[c.id] = true; },
+  "add-plan": function (d) { D.products[d.i].plans.push({ label: "নতুন প্ল্যান", price: 0 }); },
+  "del-plan": function (d) { var p = D.products[d.i]; if (p.plans.length > 1) p.plans.splice(d.j, 1); },
+  "add-pay": function () { D.payments.push({ name: "নতুন", number: "01XXXXXXXXX", kind: "Send Money", color: "#0E6B57" }); },
+  "del-pay": function (d) { D.payments.splice(d.i, 1); },
+  "add-trust": function () { D.trust.push({ icon: "star", title: "নতুন শিরোনাম", text: "এখানে লিখুন।" }); },
+  "del-trust": function (d) { D.trust.splice(d.i, 1); },
+  "add-step": function () { D.steps.push({ title: "নতুন ধাপ", text: "এখানে লিখুন।" }); },
+  "del-step": function (d) { D.steps.splice(d.i, 1); },
+  "add-faq": function () { D.faq.push({ q: "নতুন প্রশ্ন?", a: "উত্তর লিখুন।" }); },
+  "del-faq": function (d) { D.faq.splice(d.i, 1); },
+  "rm-img": function (d) { setPath(D, d.path, ""); },
+  "export-site": function () { exportSite(); return false; },
+  "export-json": function () { download(JSON.stringify(D, null, 1), "canvasell-backup.json", "application/json"); return false; },
+  "reset": function () {
+    if (!confirm("সব পরিবর্তন মুছে প্রথম অবস্থায় ফিরবেন?")) return false;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    D = JSON.parse(document.getElementById("seed").textContent); adm.open = {}; flash("রিসেট হয়েছে"); return "nosave";
+  }
+};
+app.addEventListener("click", function (e) {
+  var tab = e.target.closest("[data-tab]");
+  if (tab) { adm.tab = tab.getAttribute("data-tab"); render(); return; }
+  var b = e.target.closest("[data-act]");
+  if (!b || !ACT[b.getAttribute("data-act")]) return;
+  var r = ACT[b.getAttribute("data-act")](b.dataset);
+  if (r === false) return;
+  if (r !== "nosave") save();
+  render();
+});
+function onField(e) {
+  var el = e.target; if (!el.dataset || el.dataset.k === undefined) return;
+  var v;
+  if (el.type === "checkbox") v = el.checked;
+  else if (el.dataset.num !== undefined) v = Number(el.value) || 0;
+  else if (el.dataset.lines !== undefined) v = el.value.split("\n");
+  else v = el.value;
+  setPath(D, el.dataset.k, v);
+  if (el.dataset.sync) { var s = document.getElementById(el.dataset.sync); if (s) s.textContent = el.value || "(নাম নেই)"; }
+  save();
+}
+app.addEventListener("input", onField); app.addEventListener("change", onField);
+app.addEventListener("toggle", function (e) { var d = e.target; if (d.dataset && d.dataset.pid) adm.open[d.dataset.pid] = d.open; }, true);
+app.addEventListener("change", function (e) {
+  var el = e.target;
+  if (el.dataset && el.dataset.img) {
+    var f = el.files[0]; if (!f) return;
+    var isLogo = el.dataset.img === "settings.logo";
+    readImg(f, isLogo ? 1400 : 900, isLogo ? "image/webp" : "image/jpeg", function (url) { setPath(D, el.dataset.img, url); save(); render(); });
+  } else if (el.dataset && el.dataset.import !== undefined) {
+    var g = el.files[0]; if (!g) return;
+    var fr = new FileReader();
+    fr.onload = function () {
+      try { var o = JSON.parse(fr.result); if (!o.products || !o.settings) throw 0; D = o; save(); render(); flash("ব্যাকআপ ফিরে এসেছে"); }
+      catch (err) { flash("ফাইলটি সঠিক ব্যাকআপ নয়", true); }
+    };
+    fr.readAsText(g);
+  }
+});
+
+/* ---------- router ---------- */
+function render() {
+  var h = location.hash.slice(1), p, keepScroll = false;
+  document.title = D.settings.storeName || "Store";
+  var full = logoMode() === "full";
+  topEl.className = "top" + (full ? " full" : "");
+  if (full) topEl.style.setProperty("--logo-bg", D.settings.logoBg || "#ffffff"); else topEl.style.removeProperty("--logo-bg");
+  topEl.innerHTML = '<div class="top-in">' + logoHTML() + '</div>';
+  if (h === "admin") { var y = window.scrollY; app.innerHTML = adminView(); window.scrollTo(0, y); return; }
+  if (h.indexOf("pay-") === 0 && (p = prod(h.slice(4)))) { app.innerHTML = payView(p); bindPay(p); }
+  else if (h.indexOf("product-") === 0 && (p = prod(h.slice(8)))) { app.innerHTML = productView(p); bindProduct(p); }
+  else { app.innerHTML = homeView(); }
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", render);
+document.addEventListener("keydown", function (e) { if (e.altKey && (e.key === "a" || e.key === "A")) { location.hash = "admin"; } });
+load(); render();
+</script>
+</body>
+</html>
